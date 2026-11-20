@@ -17,6 +17,9 @@ class Categoria(Base):
 
     equipos: Mapped[list["Equipo"]] = relationship(back_populates="categoria")
 
+    def __repr__(self):
+        return f"Categoria(id={self.id}, nombre={self.nombre}, descripcion={self.descripcion})"
+
 
 class Equipo(Base):
 
