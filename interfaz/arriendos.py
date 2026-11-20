@@ -84,16 +84,18 @@ def abrir_arriendos():
                 Arriendo.estado
             ).join(Cliente).join(Equipo).order_by(Arriendo.id).all()
 
-                        for a in arriendos:
-                tabla.insert("", "end", values=(
-                    a[0],
-                    a[1],
-                    a[2],
-                    str(a[3]),
-                    str(a[4]),
-                    a[5],
-                    a[6]
-                ))
+        for a in arriendos:
+            tabla.insert("", "end", values=(
+                a[0],
+                a[1],
+                a[2],
+                str(a[3]),
+                str(a[4]),
+                a[5],
+                a[6]
+            ))
+
+        
 
     def guardar_arriendo():
 
