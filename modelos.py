@@ -54,8 +54,8 @@ class Cliente(Base):
 
     arriendos: Mapped[list["Arriendo"]] = relationship(back_populates="cliente")
        
-        def __repr__(self):
-            return f"Cliente(id={self.id}, nombre={self.nombre}, correo={self.correo}, telefono={self.telefono})"
+    def __repr__(self):
+        return f"Cliente(id={self.id}, nombre={self.nombre}, correo={self.correo}, telefono={self.telefono})"
 
 
 class Arriendo(Base):
