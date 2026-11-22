@@ -2,6 +2,7 @@ from conexion import Session
 from modelos import Equipo, Categoria
 from backend.fabrica import obtener_fabrica
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import joinedload
 
 def registrar_equipo(nombre, categoria_id, precio_diario,
                      stock_total, tipo_equipo):
@@ -48,9 +49,13 @@ def registrar_equipo(nombre, categoria_id, precio_diario,
         return False
 
 def listar_equipos():
-
     with Session() as sesion:
-        equipos = sesion.query(Equipo).order_by(Equipo.id).all()
+        equipos = (
+            sesion.query(Equipo)
+            .options(joinedload(Equipo.categoria))
+            .order_by(Equipo.id)
+            .all()
+        )
 
         return equipos
 

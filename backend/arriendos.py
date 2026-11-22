@@ -1,21 +1,19 @@
 from conexion import Session
 from modelos import Arriendo, Equipo, Cliente
 from datetime import date
-
+from sqlalchemy.orm import joinedload
 
 def registrar_arriendo(equipo_id, cliente_id, fecha_inicio,
-                       fecha_fin_prevista, cantidad):
+                      fecha_fin_prevista, cantidad):
+
     if cantidad <= 0:
-        print("Error: la cantidad debe ser mayor a cero.")
-        return False
+        return False, "La cantidad debe ser mayor a cero."
 
     if fecha_fin_prevista < fecha_inicio:
-        print("Error: la fecha de termino no puede ser anterior al inicio.")
-        return False
+        return False, "La fecha de término no puede ser anterior al inicio."
 
     if fecha_inicio < date.today():
-        print("Error: la fecha de inicio no puede ser anterior a hoy.")
-        return False
+        return False, "La fecha de inicio no puede ser anterior a hoy."
 
     with Session.begin() as sesion:
 
@@ -23,16 +21,16 @@ def registrar_arriendo(equipo_id, cliente_id, fecha_inicio,
         cliente = sesion.get(Cliente, cliente_id)
 
         if equipo is None:
-            print("Error: el equipo no existe.")
-            return False
+            return False, "El equipo no existe."
 
         if cliente is None:
-            print("Error: el cliente no existe.")
-            return False
+            return False, "El cliente no existe."
 
         if cantidad > equipo.stock_disponible:
-            print("Error: no hay stock suficiente.")
-            return False
+            return False, (
+                f"Stock insuficiente. "
+                f"Disponibles: {equipo.stock_disponible} unidades."
+            )
 
         equipo.stock_disponible -= cantidad
 
@@ -47,28 +45,34 @@ def registrar_arriendo(equipo_id, cliente_id, fecha_inicio,
 
         sesion.add(nuevo_arriendo)
 
-    print("Arriendo registrado correctamente.")
-    print("Stock actualizado correctamente.")
-    return True
-
+    return True, "Arriendo registrado correctamente."
 
 def listar_arriendos_activos():
-
     with Session() as sesion:
-
-        arriendos = sesion.query(Arriendo).filter(
-            Arriendo.estado == "ACTIVO"
-        ).order_by(Arriendo.id).all()
+        arriendos = (
+            sesion.query(Arriendo)
+            .options(
+                joinedload(Arriendo.equipo).joinedload(Equipo.categoria),
+                joinedload(Arriendo.cliente)
+            )
+            .filter(Arriendo.estado == "ACTIVO")
+            .order_by(Arriendo.id)
+            .all()
+        )
 
         return arriendos
 
 def listar_historial_arriendos():
-
     with Session() as sesion:
-
-        arriendos = sesion.query(Arriendo).order_by(
-            Arriendo.id
-        ).all()
+        arriendos = (
+            sesion.query(Arriendo)
+            .options(
+                joinedload(Arriendo.equipo).joinedload(Equipo.categoria),
+                joinedload(Arriendo.cliente)
+            )
+            .order_by(Arriendo.id)
+            .all()
+        )
 
         return arriendos
 

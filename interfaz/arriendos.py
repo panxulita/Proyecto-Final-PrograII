@@ -1,4 +1,3 @@
-
 import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import date
@@ -68,13 +67,13 @@ def abrir_arriendos():
                 str(e.id) + " - " + e.nombre for e in equipos
             ]
 
-    def cargar_arriendos():
+    modo_arriendos = tk.StringVar(value="ACTIVOS")
 
+    def cargar_arriendos():
         tabla.delete(*tabla.get_children())
 
         with Session() as sesion:
-
-            arriendos = sesion.query(
+            consulta = sesion.query(
                 Arriendo.id,
                 Cliente.nombre,
                 Equipo.nombre,
@@ -82,7 +81,12 @@ def abrir_arriendos():
                 Arriendo.fecha_fin_prevista,
                 Arriendo.cantidad,
                 Arriendo.estado
-            ).join(Cliente).join(Equipo).order_by(Arriendo.id).all()
+            ).join(Cliente).join(Equipo)
+
+            if modo_arriendos.get() == "ACTIVOS":
+                consulta = consulta.filter(Arriendo.estado == "ACTIVO")
+
+            arriendos = consulta.order_by(Arriendo.id).all()
 
         for a in arriendos:
             tabla.insert("", "end", values=(
@@ -95,10 +99,11 @@ def abrir_arriendos():
                 a[6]
             ))
 
-        
+    def cambiar_vista(modo):
+        modo_arriendos.set(modo)
+        cargar_arriendos()
 
     def guardar_arriendo():
-
         try:
             id_cliente = int(cliente.get().split(" - ")[0])
             id_equipo = int(equipo.get().split(" - ")[0])
@@ -107,19 +112,21 @@ def abrir_arriendos():
             termino = date.fromisoformat(fecha_fin.get())
             unidades = int(cantidad.get())
 
-            resultado = registrar_arriendo(
+            resultado, mensaje = registrar_arriendo(
                 id_equipo, id_cliente, inicio, termino, unidades
             )
 
             if resultado:
-                messagebox.showinfo("Aviso", "Arriendo registrado")
+                messagebox.showinfo("Éxito", mensaje)
                 cargar_arriendos()
                 cargar_datos()
+            else:
+                messagebox.showerror("Error al registrar arriendo", mensaje)
 
         except (ValueError, IndexError):
             messagebox.showerror(
                 "Error",
-                "Revise los datos y las fechas ingresadas."
+                "Revise los datos, la cantidad y las fechas ingresadas."
             )
 
     def devolver():
@@ -157,11 +164,25 @@ def abrir_arriendos():
         command=devolver
     ).pack(side="left", padx=10)
 
+    filtros = tk.Frame(ventana)
+    filtros.pack(pady=5)
+
+    tk.Button(
+        filtros,
+        text="Arriendos activos",
+        command=lambda: cambiar_vista("ACTIVOS")
+    ).pack(side="left", padx=5)
+
+    tk.Button(
+        filtros,
+        text="Historial completo",
+        command=lambda: cambiar_vista("HISTORIAL")
+    ).pack(side="left", padx=5)
+
     cargar_datos()
     cargar_arriendos()
 
     ventana.mainloop()
-
 
 if __name__ == "__main__":
     abrir_arriendos()

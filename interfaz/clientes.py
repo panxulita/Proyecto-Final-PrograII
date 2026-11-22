@@ -1,4 +1,3 @@
-
 import tkinter as tk
 from tkinter import ttk, messagebox
 
@@ -60,8 +59,33 @@ def abrir_clientes():
         telefono.delete(0, tk.END)
 
     def guardar():
+        nombre_cliente = nombre.get().strip()
+        correo_cliente = correo.get().strip()
+        telefono_cliente = telefono.get().strip()
+
+        if not nombre_cliente:
+            messagebox.showerror("Error", "Debe ingresar el nombre del cliente.")
+            return
+
+        if not correo_cliente:
+            messagebox.showerror("Error", "Debe ingresar el correo del cliente.")
+            return
+
+        if not telefono_cliente:
+            messagebox.showerror("Error", "Debe ingresar el teléfono del cliente.")
+            return
+
+        if not telefono_cliente.isdigit() or len(telefono_cliente) != 9 or not telefono_cliente.startswith("9"):
+            messagebox.showerror(
+                "Teléfono inválido",
+                "El teléfono debe tener 9 dígitos y comenzar con 9.\nEjemplo: 987654321"
+            )
+            return
+
         resultado = registrar_cliente(
-            nombre.get(), correo.get(), telefono.get()
+            nombre_cliente,
+            correo_cliente,
+            telefono_cliente
         )
 
         if resultado:
