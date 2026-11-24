@@ -4,24 +4,20 @@ from sqlalchemy.exc import IntegrityError
 
 
 def registrar_categoria(nombre, descripcion):
-
     nombre = nombre.strip()
     descripcion = descripcion.strip()
 
     if nombre == "" or descripcion == "":
-        print("Error: debe completar todos los datos.")
-        return False
+        return False, "Debe completar todos los datos."
 
     try:
         with Session.begin() as sesion:
-
             categoria_existente = sesion.query(Categoria).filter(
                 Categoria.nombre == nombre
             ).first()
 
             if categoria_existente:
-                print("Error: esta categoria ya existe.")
-                return False
+                return False, "Esta categoría ya existe."
 
             nueva_categoria = Categoria(
                 nombre=nombre,
@@ -30,18 +26,14 @@ def registrar_categoria(nombre, descripcion):
 
             sesion.add(nueva_categoria)
 
-        print("Categoria registrada correctamente.")
-        return True
+        return True, "Categoría registrada correctamente."
 
     except IntegrityError:
-        print("Error: no se pudo registrar la categoria.")
-        return False
+        return False, "No se pudo registrar la categoría."
 
 
 def listar_categorias():
-
     with Session() as sesion:
-
         categorias = sesion.query(Categoria).order_by(
             Categoria.id
         ).all()
@@ -50,31 +42,24 @@ def listar_categorias():
 
 
 def buscar_categoria(id_categoria):
-
     with Session() as sesion:
-
         categoria = sesion.get(Categoria, id_categoria)
-
         return categoria
 
 
 def actualizar_categoria(id_categoria, nombre, descripcion):
-
     nombre = nombre.strip()
     descripcion = descripcion.strip()
 
     if nombre == "" or descripcion == "":
-        print("Error: debe completar todos los datos.")
-        return False
+        return False, "Debe completar todos los datos."
 
     try:
         with Session.begin() as sesion:
-
             categoria = sesion.get(Categoria, id_categoria)
 
             if categoria is None:
-                print("Error: categoria no encontrada.")
-                return False
+                return False, "Categoría no encontrada."
 
             categoria_repetida = sesion.query(Categoria).filter(
                 Categoria.nombre == nombre,
@@ -82,36 +67,31 @@ def actualizar_categoria(id_categoria, nombre, descripcion):
             ).first()
 
             if categoria_repetida:
-                print("Error: ya existe otra categoria con ese nombre.")
-                return False
+                return False, "Ya existe otra categoría con ese nombre."
 
             categoria.nombre = nombre
             categoria.descripcion = descripcion
 
-        print("Categoria modificada correctamente.")
-        return True
+        return True, "Categoría modificada correctamente."
 
     except IntegrityError:
-        print("Error: no se pudo modificar la categoria.")
-        return False
+        return False, "No se pudo modificar la categoría."
 
 
 def eliminar_categoria(id_categoria):
+    try:
+        with Session.begin() as sesion:
+            categoria = sesion.get(Categoria, id_categoria)
 
-    with Session.begin() as sesion:
+            if categoria is None:
+                return False, "Categoría no encontrada."
 
-        categoria = sesion.get(Categoria, id_categoria)
+            if categoria.equipos:
+                return False, "No se puede eliminar una categoría que tiene equipos asociados."
 
-        if categoria is None:
-            print("Error: categoria no encontrada.")
-            return False
+            sesion.delete(categoria)
 
-        if categoria.equipos:
-            print("Error: no se puede eliminar una categoria")
-            print("que tiene equipos asociados.")
-            return False
+        return True, "Categoría eliminada correctamente."
 
-        sesion.delete(categoria)
-
-    print("Categoria eliminada correctamente.")
-    return True
+    except IntegrityError:
+        return False, "No se pudo eliminar la categoría porque tiene registros asociados."

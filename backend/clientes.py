@@ -4,30 +4,24 @@ from sqlalchemy.exc import IntegrityError
 
 
 def registrar_cliente(nombre, correo, telefono):
-
     nombre = nombre.strip()
     correo = correo.strip().lower()
     telefono = telefono.strip()
 
     if nombre == "" or correo == "" or telefono == "":
-        print("Error: debe completar todos los datos.")
-        return False
+        return False, "Debe completar todos los datos."
 
-  
     if "@" not in correo or "." not in correo:
-        print("Error: ingrese un correo valido.")
-        return False
+        return False, "Ingrese un correo válido."
 
     try:
         with Session.begin() as sesion:
-
             cliente_existente = sesion.query(Cliente).filter(
                 Cliente.correo == correo
             ).first()
 
             if cliente_existente:
-                print("Error: ya existe un cliente con ese correo.")
-                return False
+                return False, "Ya existe un cliente con ese correo."
 
             nuevo_cliente = Cliente(
                 nombre=nombre,
@@ -37,18 +31,14 @@ def registrar_cliente(nombre, correo, telefono):
 
             sesion.add(nuevo_cliente)
 
-        print("Cliente registrado correctamente.")
-        return True
+        return True, "Cliente registrado correctamente."
 
     except IntegrityError:
-        print("Error: no se pudo registrar el cliente.")
-        return False
+        return False, "No se pudo registrar el cliente."
 
 
 def listar_clientes():
-
     with Session() as sesion:
-
         clientes = sesion.query(Cliente).order_by(
             Cliente.id
         ).all()
@@ -57,36 +47,28 @@ def listar_clientes():
 
 
 def buscar_cliente(id_cliente):
-
     with Session() as sesion:
-
         cliente = sesion.get(Cliente, id_cliente)
-
         return cliente
 
 
 def actualizar_cliente(id_cliente, nombre, correo, telefono):
-
     nombre = nombre.strip()
     correo = correo.strip().lower()
     telefono = telefono.strip()
 
     if nombre == "" or correo == "" or telefono == "":
-        print("Error: debe completar todos los datos.")
-        return False
+        return False, "Debe completar todos los datos."
 
     if "@" not in correo or "." not in correo:
-        print("Error: ingrese un correo valido.")
-        return False
+        return False, "Ingrese un correo válido."
 
     try:
         with Session.begin() as sesion:
-
             cliente = sesion.get(Cliente, id_cliente)
 
             if cliente is None:
-                print("Error: cliente no encontrado.")
-                return False
+                return False, "Cliente no encontrado."
 
             correo_repetido = sesion.query(Cliente).filter(
                 Cliente.correo == correo,
@@ -94,38 +76,32 @@ def actualizar_cliente(id_cliente, nombre, correo, telefono):
             ).first()
 
             if correo_repetido:
-                print("Error: ese correo pertenece a otro cliente.")
-                return False
+                return False, "Ese correo pertenece a otro cliente."
 
             cliente.nombre = nombre
             cliente.correo = correo
             cliente.telefono = telefono
 
-        print("Cliente modificado correctamente.")
-        return True
+        return True, "Cliente modificado correctamente."
 
     except IntegrityError:
-        print("Error: no se pudo modificar el cliente.")
-        return False
+        return False, "No se pudo modificar el cliente."
 
 
 def eliminar_cliente(id_cliente):
+    try:
+        with Session.begin() as sesion:
+            cliente = sesion.get(Cliente, id_cliente)
 
-    with Session.begin() as sesion:
+            if cliente is None:
+                return False, "Cliente no encontrado."
 
-        cliente = sesion.get(Cliente, id_cliente)
+            if cliente.arriendos:
+                return False, "No se puede eliminar un cliente que tiene arriendos registrados."
 
-        if cliente is None:
-            print("Error: cliente no encontrado.")
-            return False
+            sesion.delete(cliente)
 
-      
-        if cliente.arriendos:
-            print("Error: no se puede eliminar un cliente")
-            print("que tiene arriendos registrados.")
-            return False
+        return True, "Cliente eliminado correctamente."
 
-        sesion.delete(cliente)
-
-    print("Cliente eliminado correctamente.")
-    return True
+    except IntegrityError:
+        return False, "No se puede eliminar el cliente porque tiene registros asociados."
