@@ -4,14 +4,18 @@ from datetime import date
 
 from conexion import Session
 from modelos import Cliente, Equipo, Arriendo
-from backend.arriendos import registrar_arriendo, registrar_devolucion
-
+from backend.arriendos import (
+    registrar_arriendo,
+    registrar_devolucion,
+    eliminar_arriendo,
+    eliminar_todos_los_arriendos
+)
 
 def abrir_arriendos():
 
     ventana = tk.Tk()
     ventana.title("Gestion de arriendos")
-    ventana.geometry("850x550")
+    ventana.geometry("1100x650")
 
     tk.Label(ventana, text="GESTION DE ARRIENDOS",
              font=("Arial", 16, "bold")).pack(pady=10)
@@ -129,28 +133,89 @@ def abrir_arriendos():
                 "Revise los datos, la cantidad y las fechas ingresadas."
             )
 
+
     def devolver():
 
         seleccionado = tabla.selection()
 
-        if seleccionado:
-            datos = tabla.item(seleccionado[0], "values")
-
-            if datos[6] != "ACTIVO":
-                messagebox.showwarning(
-                    "Aviso", "Este arriendo ya fue devuelto."
-                )
-                return
-
-            if messagebox.askyesno("Confirmar", "¿Registrar devolucion?"):
-
-                if registrar_devolucion(int(datos[0])):
-                    cargar_arriendos()
-                    cargar_datos()
-        else:
+        if not seleccionado:
             messagebox.showwarning(
                 "Aviso", "Seleccione un arriendo."
             )
+            return
+
+        datos = tabla.item(seleccionado[0], "values")
+
+        if datos[6] != "ACTIVO":
+            messagebox.showwarning(
+                "Aviso", "Este arriendo ya fue devuelto."
+            )
+            return
+
+        confirmar = messagebox.askyesno(
+            "Confirmar",
+            "¿Registrar devolución?"
+        )
+
+        if confirmar:
+            resultado, mensaje = registrar_devolucion(int(datos[0]))
+
+            if resultado:
+                messagebox.showinfo("Éxito", mensaje)
+                cargar_arriendos()
+                cargar_datos()
+            else:
+                messagebox.showerror("Error", mensaje)
+
+    def eliminar_seleccionado():
+
+        seleccionado = tabla.selection()
+
+        if not seleccionado:
+            messagebox.showwarning(
+                "Aviso",
+                "Seleccione un arriendo para eliminar."
+            )
+            return
+
+        datos = tabla.item(seleccionado[0], "values")
+        id_arriendo = int(datos[0])
+
+        confirmar = messagebox.askyesno(
+            "Confirmar eliminación",
+            f"¿Está seguro de eliminar el arriendo #{id_arriendo}?"
+        )
+
+        if confirmar:
+            resultado, mensaje = eliminar_arriendo(id_arriendo)
+
+            if resultado:
+                messagebox.showinfo("Éxito", mensaje)
+                cargar_arriendos()
+                cargar_datos()
+            else:
+                messagebox.showerror("Error", mensaje)
+
+
+    def eliminar_todos():
+
+        confirmar = messagebox.askyesno(
+            "Eliminar todos",
+            "¿Está seguro de eliminar TODOS los arriendos?\n\n"
+            "Esta acción eliminará tanto los activos como el historial."
+        )
+
+        if not confirmar:
+            return
+
+        resultado, mensaje = eliminar_todos_los_arriendos()
+
+        if resultado:
+            messagebox.showinfo("Éxito", mensaje)
+            cargar_arriendos()
+            cargar_datos()
+        else:
+            messagebox.showerror("Error", mensaje)
 
     tk.Button(
         ventana,
@@ -162,6 +227,18 @@ def abrir_arriendos():
         ventana,
         text="Registrar devolucion",
         command=devolver
+    ).pack(side="left", padx=10)
+
+    tk.Button(
+        ventana,
+        text="Eliminar arriendo seleccionado",
+        command=eliminar_seleccionado
+    ).pack(side="left", padx=10)
+
+    tk.Button(
+        ventana,
+        text="Eliminar todo",
+        command=eliminar_todos
     ).pack(side="left", padx=10)
 
     filtros = tk.Frame(ventana)

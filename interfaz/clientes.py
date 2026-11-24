@@ -58,6 +58,7 @@ def abrir_clientes():
         correo.delete(0, tk.END)
         telefono.delete(0, tk.END)
 
+
     def guardar():
         nombre_cliente = nombre.get().strip()
         correo_cliente = correo.get().strip()
@@ -82,16 +83,18 @@ def abrir_clientes():
             )
             return
 
-        resultado = registrar_cliente(
+        resultado, mensaje = registrar_cliente(
             nombre_cliente,
             correo_cliente,
             telefono_cliente
         )
 
         if resultado:
-            messagebox.showinfo("Aviso", "Cliente registrado")
+            messagebox.showinfo("Aviso", mensaje)
             limpiar()
             cargar_clientes()
+        else:
+            messagebox.showerror("Error", mensaje)
 
     def seleccionar(evento):
         seleccionado = tabla.selection()
@@ -109,7 +112,7 @@ def abrir_clientes():
         if seleccionado:
             datos = tabla.item(seleccionado[0], "values")
 
-            resultado = actualizar_cliente(
+            resultado, mensaje = actualizar_cliente(
                 int(datos[0]),
                 nombre.get(),
                 correo.get(),
@@ -117,12 +120,16 @@ def abrir_clientes():
             )
 
             if resultado:
-                messagebox.showinfo("Aviso", "Cliente modificado")
+                messagebox.showinfo("Aviso", mensaje)
                 limpiar()
                 cargar_clientes()
+            else:
+                messagebox.showerror("Error", mensaje)
+
         else:
             messagebox.showwarning("Aviso", "Seleccione un cliente")
 
+    
     def eliminar():
         seleccionado = tabla.selection()
 
@@ -130,13 +137,30 @@ def abrir_clientes():
             datos = tabla.item(seleccionado[0], "values")
 
             if messagebox.askyesno("Confirmar", "¿Eliminar cliente?"):
-                if eliminar_cliente(int(datos[0])):
+                resultado, mensaje = eliminar_cliente(int(datos[0]))
+
+                if resultado:
+                    messagebox.showinfo("Aviso", mensaje)
                     cargar_clientes()
                     limpiar()
+                else:
+                    messagebox.showerror("No se puede eliminar", mensaje)
+
         else:
             messagebox.showwarning("Aviso", "Seleccione un cliente")
 
     tabla.bind("<<TreeviewSelect>>", seleccionar)
+
+    def deseleccionar_al_hacer_clic(event):
+        fila = tabla.identify_row(event.y)
+
+        if fila and fila in tabla.selection():
+            tabla.selection_remove(fila)
+            limpiar()
+            return "break"
+
+
+    tabla.bind("<Button-1>", deseleccionar_al_hacer_clic)
 
     tk.Button(ventana, text="Registrar", command=guardar).pack(side="left", padx=40)
     tk.Button(ventana, text="Modificar", command=modificar).pack(side="left")

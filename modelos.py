@@ -1,4 +1,5 @@
 from sqlalchemy import String, Integer, Numeric, ForeignKey, CheckConstraint
+from decimal import Decimal
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from datetime import date
 
@@ -35,7 +36,7 @@ class Equipo(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     nombre: Mapped[str] = mapped_column(String(100), nullable=False)
     categoria_id: Mapped[int] = mapped_column(ForeignKey("categoria.id"), nullable=False)
-    precio_diario: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
+    precio_diario: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     stock_total: Mapped[int] = mapped_column(Integer, nullable=False)
     stock_disponible: Mapped[int] = mapped_column(Integer, nullable=False)
 

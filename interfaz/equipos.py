@@ -104,40 +104,66 @@ def abrir_equipos():
         categoria.set("")
         tipo.set("")
 
+
     def guardar():
+        nombre_equipo = nombre.get().strip()
+        precio_texto = precio.get().strip()
+        stock_texto = stock.get().strip()
+
+        if not nombre_equipo:
+            messagebox.showerror("Error", "Debe ingresar el nombre del equipo.")
+            return
+
+        if not precio_texto:
+            messagebox.showerror("Error", "Debe ingresar el precio diario.")
+            return
+
+        if not stock_texto:
+            messagebox.showerror("Error", "Debe ingresar el stock.")
+            return
+
+        if not categoria.get():
+            messagebox.showwarning("Aviso", "Seleccione una categoría.")
+            return
+
+        if not tipo.get():
+            messagebox.showwarning("Aviso", "Seleccione el tipo de equipo.")
+            return
+
         try:
-            nombre_equipo = nombre.get()
-            precio_equipo = float(precio.get())
-            stock_equipo = int(stock.get())
-
-            if not categoria.get():
-                messagebox.showwarning("Aviso", "Seleccione una categoria")
-                return
-
-            if not tipo.get():
-                messagebox.showwarning("Aviso", "Seleccione el tipo de equipo")
-                return
-
-            categoria_id = int(categoria.get().split(" - ")[0])
-
-            resultado = registrar_equipo(
-                nombre_equipo,
-                categoria_id,
-                precio_equipo,
-                stock_equipo,
-                tipo.get()
-            )
-
-            if resultado:
-                messagebox.showinfo("Aviso", "Equipo registrado correctamente")
-                limpiar()
-                cargar_equipos()
-
+            precio_equipo = float(precio_texto)
+            stock_equipo = int(stock_texto)
         except ValueError:
             messagebox.showerror(
                 "Error",
-                "El precio y el stock deben ser numeros validos"
+                "El precio debe ser numérico y el stock un número entero."
             )
+            return
+
+        if precio_equipo <= 0:
+            messagebox.showerror("Error", "El precio debe ser mayor que cero.")
+            return
+
+        if stock_equipo < 0:
+            messagebox.showerror("Error", "El stock no puede ser negativo.")
+            return
+
+        categoria_id = int(categoria.get().split(" - ")[0])
+
+        resultado, mensaje = registrar_equipo(
+            nombre_equipo,
+            categoria_id,
+            precio_equipo,
+            stock_equipo,
+            tipo.get()
+        )
+
+        if resultado:
+            messagebox.showinfo("Aviso", mensaje)
+            limpiar()
+            cargar_equipos()
+        else:
+            messagebox.showerror("Error", mensaje)
 
     def seleccionar(evento):
         seleccionado = tabla.selection()
@@ -156,71 +182,117 @@ def abrir_equipos():
                     categoria.set(f"{c.id} - {c.nombre}")
                     break
 
+
     def modificar():
         seleccionado = tabla.selection()
 
-        if seleccionado:
-            datos = tabla.item(seleccionado[0], "values")
-
-            try:
-                categoria_id = int(categoria.get().split(" - ")[0])
-
-                resultado = actualizar_equipo(
-                    int(datos[0]),
-                    nombre.get(),
-                    categoria_id,
-                    float(precio.get()),
-                    int(stock.get())
-                )
-
-                if resultado:
-                    messagebox.showinfo(
-                        "Aviso",
-                        "Equipo modificado correctamente"
-                    )
-                    limpiar()
-                    cargar_equipos()
-
-            except ValueError:
-                messagebox.showerror(
-                    "Error",
-                    "Verifique los datos ingresados"
-                )
-
-        else:
+        if not seleccionado:
             messagebox.showwarning(
                 "Aviso",
-                "Seleccione un equipo para modificar"
+                "Seleccione un equipo para modificar."
             )
+            return
+
+        datos = tabla.item(seleccionado[0], "values")
+
+        nombre_equipo = nombre.get().strip()
+        precio_texto = precio.get().strip()
+        stock_texto = stock.get().strip()
+
+        if not nombre_equipo:
+            messagebox.showerror("Error", "Debe ingresar el nombre del equipo.")
+            return
+
+        if not precio_texto:
+            messagebox.showerror("Error", "Debe ingresar el precio diario.")
+            return
+
+        if not stock_texto:
+            messagebox.showerror("Error", "Debe ingresar el stock.")
+            return
+
+        if not categoria.get():
+            messagebox.showwarning("Aviso", "Seleccione una categoría.")
+            return
+
+        try:
+            precio_equipo = float(precio_texto)
+            stock_equipo = int(stock_texto)
+            categoria_id = int(categoria.get().split(" - ")[0])
+
+        except ValueError:
+            messagebox.showerror(
+                "Error",
+                "Verifique que el precio y stock sean numéricos válidos."
+            )
+            return
+
+        if precio_equipo <= 0:
+            messagebox.showerror("Error", "El precio debe ser mayor que cero.")
+            return
+
+        if stock_equipo < 0:
+            messagebox.showerror("Error", "El stock no puede ser negativo.")
+            return
+
+        resultado, mensaje = actualizar_equipo(
+            int(datos[0]),
+            nombre_equipo,
+            categoria_id,
+            precio_equipo,
+            stock_equipo
+        )
+
+        if resultado:
+            messagebox.showinfo("Aviso", mensaje)
+            limpiar()
+            cargar_equipos()
+        else:
+            messagebox.showerror("No se pudo modificar", mensaje)
+
+
     def eliminar():
         seleccionado = tabla.selection()
 
-        if seleccionado:
-            datos = tabla.item(seleccionado[0], "values")
-
-            confirmar = messagebox.askyesno(
-                "Confirmar",
-                f"¿Desea eliminar el equipo {datos[1]}?"
-            )
-
-            if confirmar:
-                resultado = eliminar_equipo(int(datos[0]))
-
-                if resultado:
-                    messagebox.showinfo(
-                        "Aviso",
-                        "Equipo eliminado correctamente"
-                    )
-                    limpiar()
-                    cargar_equipos()
-
-        else:
+        if not seleccionado:
             messagebox.showwarning(
                 "Aviso",
-                "Seleccione un equipo para eliminar"
+                "Seleccione un equipo para eliminar."
             )
+            return
+
+        datos = tabla.item(seleccionado[0], "values")
+
+        confirmar = messagebox.askyesno(
+            "Confirmar",
+            f"¿Desea eliminar el equipo {datos[1]}?"
+        )
+
+        if confirmar:
+            resultado, mensaje = eliminar_equipo(int(datos[0]))
+
+            if resultado:
+                messagebox.showinfo("Aviso", mensaje)
+                limpiar()
+                cargar_equipos()
+            else:
+                messagebox.showerror("No se puede eliminar", mensaje)
+
 
     tabla.bind("<<TreeviewSelect>>", seleccionar)
+
+
+    def deseleccionar_al_hacer_clic(event):
+        fila = tabla.identify_row(event.y)
+
+        if fila and fila in tabla.selection():
+            tabla.selection_remove(fila)
+            limpiar()
+            return "break"
+
+
+    tabla.bind("<Button-1>", deseleccionar_al_hacer_clic)
+
 
     botones = tk.Frame(ventana)
     botones.pack(pady=10)

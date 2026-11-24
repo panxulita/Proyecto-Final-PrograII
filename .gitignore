@@ -1,0 +1,7 @@
+﻿__pycache__/
+*.py[cod]
+arriendos.db
+*.db
+.venv/
+venv/
+.env

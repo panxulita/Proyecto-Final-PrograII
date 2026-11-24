@@ -78,29 +78,58 @@ def listar_historial_arriendos():
 
 
 def registrar_devolucion(id_arriendo):
-
     with Session.begin() as sesion:
-
         arriendo = sesion.get(Arriendo, id_arriendo)
 
         if arriendo is None:
-            print("Error: el arriendo no existe.")
-            return False
+            return False, "El arriendo no existe."
 
         if arriendo.estado != "ACTIVO":
-            print("Error: este arriendo ya fue devuelto.")
-            return False
+            return False, "Este arriendo ya fue devuelto."
 
         equipo = sesion.get(Equipo, arriendo.equipo_id)
 
         if equipo is None:
-            print("Error: no se encontro el equipo asociado.")
-            return False
+            return False, "No se encontró el equipo asociado."
 
         equipo.stock_disponible += arriendo.cantidad
-
         arriendo.estado = "DEVUELTO"
 
-    print("Devolucion registrada correctamente.")
-    print("Stock restituido correctamente.")
-    return True
+    return True, "Devolución registrada y stock restituido correctamente."
+
+def eliminar_arriendo(id_arriendo):
+    with Session.begin() as sesion:
+        arriendo = sesion.get(Arriendo, id_arriendo)
+
+        if arriendo is None:
+            return False, "El arriendo no existe."
+
+        # Si está activo, devolver el stock antes de eliminarlo
+        if arriendo.estado == "ACTIVO":
+            equipo = sesion.get(Equipo, arriendo.equipo_id)
+
+            if equipo is not None:
+                equipo.stock_disponible += arriendo.cantidad
+
+        sesion.delete(arriendo)
+
+    return True, "Arriendo eliminado correctamente."
+
+
+def eliminar_todos_los_arriendos():
+    with Session.begin() as sesion:
+        arriendos = sesion.query(Arriendo).all()
+
+        # Restituir stock de los arriendos que aún están activos
+        for arriendo in arriendos:
+            if arriendo.estado == "ACTIVO":
+                equipo = sesion.get(Equipo, arriendo.equipo_id)
+
+                if equipo is not None:
+                    equipo.stock_disponible += arriendo.cantidad
+
+        cantidad_eliminados = len(arriendos)
+
+        sesion.query(Arriendo).delete(synchronize_session=False)
+
+    return True, f"Se eliminaron {cantidad_eliminados} arriendos correctamente."

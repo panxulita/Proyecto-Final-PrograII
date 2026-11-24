@@ -30,7 +30,7 @@ def main():
 
     ventana = tk.Tk()
     ventana.title("Sistema de Arriendo de Equipos Deportivos")
-    ventana.geometry("500x550")
+    ventana.geometry("500x620")
     ventana.resizable(False, False)
 
     titulo = tk.Label(
@@ -64,6 +64,14 @@ def main():
         width=30,
         height=2,
         command=lambda: abrir_modulo("interfaz.equipos")
+    ).pack(pady=8)
+
+    tk.Button(
+        botones,
+        text="Gestionar Categorías",
+        width=30,
+        height=2,
+        command=lambda: abrir_modulo("interfaz.categorias")
     ).pack(pady=8)
 
     tk.Button(
